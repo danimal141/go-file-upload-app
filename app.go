@@ -24,27 +24,28 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Allowed POST method only", http.StatusMethodNotAllowed)
 		return
 	}
+
 	err := r.ParseMultipartForm(32 << 20) // maxMemory
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	form := r.MultipartForm
-	file, err := form.File["upload"][0].Open() // not deal with multiple file upload
+
+	file, _, err := r.FormFile("upload")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	defer file.Close()
+
+	f, err := os.Create("/tmp/test.jpg")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	dest, err := os.Create("/tmp/test.jpg")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if _, err := io.Copy(dest, file); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	defer f.Close()
+
+	io.Copy(f, file)
 	http.Redirect(w, r, "/show", http.StatusFound)
 }
 
@@ -55,11 +56,13 @@ func ShowHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	img, _, err := image.Decode(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	writeImageWithTemplate(w, "show", &img)
 }
 

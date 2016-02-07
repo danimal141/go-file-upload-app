@@ -60,7 +60,7 @@ func ShowHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	writeImage(w, "show", &img)
+	writeImageWithTemplate(w, "show", &img)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
@@ -69,7 +69,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	}
 }
 
-func writeImage(w http.ResponseWriter, tmpl string, img *image.Image) {
+func writeImageWithTemplate(w http.ResponseWriter, tmpl string, img *image.Image) {
 	buffer := new(bytes.Buffer)
 	if err := jpeg.Encode(buffer, *img, nil); err != nil {
 		log.Fatalln("Unable to encode image.")
